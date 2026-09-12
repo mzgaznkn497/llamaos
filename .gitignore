@@ -1,0 +1,14 @@
+# Build artifacts
+build/
+bin/
+*.o
+*.elf
+*.bin
+*.iso
+*.img
+
+# Editor and temporary files
+.vscode/
+.idea/
+*.swp
+*~
