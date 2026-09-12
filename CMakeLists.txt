@@ -78,9 +78,19 @@ add_custom_command(
 
 add_custom_target(iso ALL DEPENDS ${ISO_PATH})
 
+# Host regression test executable
+add_executable(test_parser
+    tests/test_parser.cpp
+    kernel/arch/x86_64/boot/multiboot2.cpp
+    kernel/core/string.cpp
+)
+target_include_directories(test_parser PRIVATE kernel)
+target_compile_options(test_parser PRIVATE -Wall -Wextra -Werror)
+
 # Boot testing target
 add_custom_target(test-boot
+    COMMAND $<TARGET_FILE:test_parser>
     COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/scripts/test_boot.py ${ISO_PATH}
-    DEPENDS iso
-    COMMENT "Running automated QEMU boot test"
+    DEPENDS iso test_parser
+    COMMENT "Running regression tests and automated QEMU boot test"
 )

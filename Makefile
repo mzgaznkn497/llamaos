@@ -71,7 +71,9 @@ ASM_OBJS := $(patsubst %.asm,$(BUILD_DIR)/%.o,$(ASM_SRCS))
 CXX_OBJS := $(patsubst %.cpp,$(BUILD_DIR)/%.o,$(CXX_SRCS))
 ALL_OBJS := $(ASM_OBJS) $(CXX_OBJS)
 
-.PHONY: all kernel iso test qemu qemu-uefi qemu-gdb clean help
+REGRESSION_BIN := $(BUILD_DIR)/test_parser
+
+.PHONY: all kernel iso test test-unit qemu qemu-uefi qemu-gdb clean help
 
 all: kernel iso
 
@@ -103,7 +105,16 @@ $(ISO_IMAGE): $(KERNEL_ELF) boot/grub/grub.cfg
 	@$(GRUB_RESCUE) -o $(ISO_IMAGE) $(ISO_ROOT) 2>/dev/null
 	@echo " [INFO] Bootable ISO generated successfully at $(ISO_IMAGE)"
 
-test: $(ISO_IMAGE)
+test-unit: $(REGRESSION_BIN)
+	@echo " [TEST] Executing host-side parser regression test suite..."
+	@$(REGRESSION_BIN)
+
+$(REGRESSION_BIN): tests/test_parser.cpp kernel/arch/x86_64/boot/multiboot2.cpp kernel/core/string.cpp
+	@mkdir -p $(BUILD_DIR)
+	@echo " [HOST_CXX] $@"
+	@$(CXX) -std=c++20 -Wall -Wextra -Werror -I kernel $^ -o $@
+
+test: test-unit $(ISO_IMAGE)
 	@echo " [TEST] Executing automated QEMU boot test harness..."
 	@$(PYTHON) scripts/test_boot.py $(ISO_IMAGE)
 

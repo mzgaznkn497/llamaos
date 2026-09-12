@@ -15,10 +15,12 @@ REQUIRED_TOKENS = [
     "LlamaOS/A",
     "Milestone 1: Bootable Foundation",
     "IA-32e Long Mode (64-bit)",
-    "[PASS] CPU Architecture Verification",
+    "[PASS] CPU Architecture & Security Extensions",
     "[PASS] Freestanding Memory Primitives",
-    "[PASS] Bootloader Protocol Handshake",
-    "[PASS] Higher-Half Virtual Memory Layout",
+    "[PASS] Higher-Half Runtime Execution & MMU Paging",
+    "[PASS] Bootloader Protocol & Memory Map Integrity",
+    "[PASS] Command-Line Tokenizer Sanity",
+    "[PASS] Stack Protector Security Canary Active",
     "LlamaOS/A Kernel Boot Milestone 1 Accomplished Successfully!"
 ]
 

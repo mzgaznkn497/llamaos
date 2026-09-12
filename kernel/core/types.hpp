@@ -9,22 +9,22 @@
 
 namespace llamaos {
 
-// Fixed-width integer types
-using int8_t   = signed char;
-using uint8_t  = unsigned char;
-using int16_t  = short;
-using uint16_t = unsigned short;
-using int32_t  = int;
-using uint32_t = unsigned int;
-using int64_t  = long long;
-using uint64_t = unsigned long long;
+// Fixed-width integer types matched with compiler ABI
+using int8_t   = __INT8_TYPE__;
+using uint8_t  = __UINT8_TYPE__;
+using int16_t  = __INT16_TYPE__;
+using uint16_t = __UINT16_TYPE__;
+using int32_t  = __INT32_TYPE__;
+using uint32_t = __UINT32_TYPE__;
+using int64_t  = __INT64_TYPE__;
+using uint64_t = __UINT64_TYPE__;
 
 // Pointer-sized and pointer arithmetic types
-using intptr_t  = long long;
-using uintptr_t = unsigned long long;
-using ptrdiff_t = long long;
-using size_t    = unsigned long long;
-using ssize_t   = long long;
+using intptr_t  = __INTPTR_TYPE__;
+using uintptr_t = __UINTPTR_TYPE__;
+using ptrdiff_t = __PTRDIFF_TYPE__;
+using size_t    = __SIZE_TYPE__;
+using ssize_t   = __PTRDIFF_TYPE__;
 
 // Boolean type
 static_assert(sizeof(bool) == 1, "bool must be 1 byte");
@@ -33,6 +33,21 @@ static_assert(sizeof(uint16_t) == 2, "uint16_t must be 2 bytes");
 static_assert(sizeof(uint32_t) == 4, "uint32_t must be 4 bytes");
 static_assert(sizeof(uint64_t) == 8, "uint64_t must be 8 bytes");
 static_assert(sizeof(uintptr_t) == 8, "uintptr_t must be 8 bytes for x86-64");
+
+// Integer limit constants
+constexpr uint8_t  UINT8_MAX  = 0xFFU;
+constexpr uint16_t UINT16_MAX = 0xFFFFU;
+constexpr uint32_t UINT32_MAX = 0xFFFFFFFFU;
+constexpr uint64_t UINT64_MAX = 0xFFFFFFFFFFFFFFFFULL;
+
+constexpr int8_t   INT8_MAX   = 0x7F;
+constexpr int8_t   INT8_MIN   = -0x80;
+constexpr int16_t  INT16_MAX  = 0x7FFF;
+constexpr int16_t  INT16_MIN  = -0x8000;
+constexpr int32_t  INT32_MAX  = 0x7FFFFFFF;
+constexpr int32_t  INT32_MIN  = -0x7FFFFFFF - 1;
+constexpr int64_t  INT64_MAX  = 0x7FFFFFFFFFFFFFFFLL;
+constexpr int64_t  INT64_MIN  = -0x7FFFFFFFFFFFFFFFLL - 1LL;
 
 // Address spaces
 constexpr uintptr_t KERNEL_VIRTUAL_BASE = 0xFFFFFFFF80000000ULL;
@@ -76,4 +91,13 @@ using llamaos::uintptr_t;
 using llamaos::size_t;
 using llamaos::ssize_t;
 using llamaos::ptrdiff_t;
+
+using llamaos::UINT8_MAX;
+using llamaos::UINT16_MAX;
+using llamaos::UINT32_MAX;
+using llamaos::UINT64_MAX;
+using llamaos::INT8_MAX;
+using llamaos::INT16_MAX;
+using llamaos::INT32_MAX;
+using llamaos::INT64_MAX;
 

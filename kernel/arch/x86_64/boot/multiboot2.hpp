@@ -3,12 +3,19 @@
 #include "core/types.hpp"
 
 // =============================================================================
-// LlamaOS/A - Multiboot2 Specification Definitions and Parser
+// LlamaOS/A - Hardened Multiboot2 Specification Definitions and Parser
+// =============================================================================
+// Defines strongly-typed structures and strict validation interfaces for
+// parsing bootloader-supplied Multiboot2 information blocks.
 // =============================================================================
 
 namespace llamaos::boot {
 
 constexpr uint32_t MULTIBOOT2_BOOTLOADER_MAGIC = 0x36d76289;
+constexpr size_t MAX_CMDLINE_LEN = 256;
+constexpr size_t MAX_LOADER_NAME_LEN = 64;
+constexpr size_t MAX_MEMORY_REGIONS = 64;
+constexpr uint32_t MAX_REASONABLE_INFO_SIZE = 8 * 1024 * 1024; // 8 MiB sanity ceiling
 
 // Multiboot2 Tag Types
 enum class TagType : uint32_t {
@@ -49,35 +56,72 @@ struct MemoryMapEntry {
     uint32_t type;
     uint32_t reserved;
 };
+static_assert(sizeof(MemoryMapEntry) == 24, "MemoryMapEntry must be exactly 24 bytes");
+
+enum class FramebufferType : uint8_t {
+    Indexed = 0,
+    DirectRgb = 1,
+    EgaText = 2,
+    Unknown = 255
+};
+
+struct FramebufferColorField {
+    uint8_t position;
+    uint8_t mask_size;
+};
 
 struct FramebufferInfo {
+    bool valid;
     uint64_t address;
     uint32_t pitch;
     uint32_t width;
     uint32_t height;
     uint8_t  bpp;
-    uint8_t  type;
-    bool     available;
+    FramebufferType type;
+    FramebufferColorField red;
+    FramebufferColorField green;
+    FramebufferColorField blue;
 };
 
-constexpr size_t MAX_MEMORY_REGIONS = 64;
+struct AcpiInfo {
+    bool valid;
+    bool is_v2;
+    uint8_t revision;
+    char oem_id[7]; // 6 characters + NUL terminator
+    uintptr_t rsdp_addr;
+    uint32_t length;
+    uint64_t xsdt_address;
+};
+
+struct EfiInfo {
+    bool present;
+    uint64_t system_table_paddr;
+};
 
 struct BootInformation {
     bool valid;
-    const char* command_line;
-    const char* bootloader_name;
+    bool mmap_truncated;
+    bool usable_ram_overflow;
+
+    char command_line[MAX_CMDLINE_LEN];
+    char bootloader_name[MAX_LOADER_NAME_LEN];
+
     uint32_t mem_lower_kb;
     uint32_t mem_upper_kb;
     uint64_t total_usable_ram_bytes;
 
     size_t mmap_count;
+    size_t total_mmap_entries_detected;
     MemoryMapEntry mmap_entries[MAX_MEMORY_REGIONS];
 
     FramebufferInfo framebuffer;
-    uint64_t acpi_rsdp;
-    uint64_t efi_system_table;
+    AcpiInfo acpi;
+    EfiInfo efi;
 
-    void parse(uint64_t magic, uintptr_t info_addr);
+    bool parse(uint64_t magic, uintptr_t info_addr);
+    bool has_argument(const char* arg_name) const;
+    bool is_test_mode() const;
+    bool is_debug_mode() const;
     const char* memory_type_to_string(MemoryType type) const;
 };
 

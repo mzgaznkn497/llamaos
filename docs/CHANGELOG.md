@@ -4,7 +4,42 @@ All notable changes to LlamaOS/A are documented in this file.
 
 ---
 
+## [0.1.1-audit] - 2026-09-12 — Phase 1 Hardening, Security, Correctness, and Reliability Audit
+
+### Fixed & Hardened
+- **Multiboot2 Parser Security Hardening** (`kernel/arch/x86_64/boot/multiboot2.cpp`, `multiboot2.hpp`):
+  - Fixed unbounded tag iteration: added minimum size check (16 bytes), sanity ceiling (8 MiB), and pointer addition overflow checks.
+  - Added tag header pre-validation: ensured tag header (`type`, `size`) is within remaining buffer before dereference.
+  - Added zero-size and undersized tag rejection (`size < 8`) to eliminate infinite loops.
+  - Guarded tag advance arithmetic against 32-bit addition overflow and 64-bit address wraparound.
+  - Bounded string tag extraction for `Cmdline` and `BootLoaderName`: strings copied into fixed buffers with guaranteed NUL termination.
+  - Memory-map security: entry size validated (`24 <= entry_size <= 1024`), incomplete trailing entry rejection, 64-bit region range overflow check (`base + length >= base`).
+  - Total usable RAM accumulation protected against integer overflow with saturation arithmetic and warning flag.
+  - Added detection and warning for memory-map buffer truncation (`mmap_truncated`).
+  - Framebuffer validation: checked common header length (32 bytes), direct RGB sub-header length (38 bytes), dimension sanity (up to 8K), and pitch/height 64-bit multiplication overflow check.
+  - ACPI RSDP verification: signature validated (`"RSD PTR "`), 20-byte checksum verified for ACPI 1.0, 36-byte checksum verified for ACPI 2.0+, OEM ID safely copied.
+  - EFI 64-bit system table pointer validated and distinguished as firmware physical pointer.
+- **Command-Line Parsing Correctness** (`kernel/arch/x86_64/boot/multiboot2.cpp`, `multiboot2.hpp`):
+  - Replaced naive substring search (`strchr`) with exact token-based parser (`has_argument`, `is_test_mode`, `is_debug_mode`).
+  - Prevented false positives from parameters containing 't' or 's' (e.g. `status`, `testingfoo`).
+- **Higher-Half Runtime MMU Verification** (`kernel/kernel_main.cpp`):
+  - Replaced linker symbol inspection with active runtime architectural checks: instruction pointer (`RIP`), stack pointer (`RSP` within 64 KiB kernel stack), segment registers (`CS=0x08`, `DS=0x10`), and MSR EFER flags (`LMA=1`, `NXE=1`).
+  - Implemented hardware page table walk: inspecting CR3 root, PML4[511], PDPT[510], and PD[0] (verifying 2MB huge page entry `0x83`).
+- **Standard Freestanding Types & ABI Conformance** (`kernel/core/types.hpp`, `string.hpp`, `string.cpp`):
+  - Defined primitive types using compiler builtin macros (`__SIZE_TYPE__`, `__UINTPTR_TYPE__`, etc.) to guarantee ABI compatibility with compiler intrinsics and host unit test frameworks.
+  - Standardized `strchr` signature to match C/C++ freestanding expectations.
+  - Added `UINT64_MAX`, `UINT32_MAX`, and standard integer limits.
+- **Enhanced Formatted Printing** (`kernel/core/kprint.cpp`):
+  - Added precision specifier support (e.g. `%.6s`) for fixed-width string rendering.
+  - Fixed 64-bit integer printing to eliminate silent 32-bit narrowing casts for memory capacities exceeding 4 GiB.
+- **Host-Side Regression Test Suite** (`tests/test_parser.cpp`):
+  - Added 14 unit and negative regression test cases verifying malformed magic, zero/unaligned pointers, undersized/oversized buffers, zero tag size, unterminated strings, corrupted mmap entry sizes, arithmetic overflows, invalid framebuffers, corrupted ACPI checksums, and token parsing.
+  - Integrated into both `Makefile` (`make test`) and `CMakeLists.txt` (`test-boot`).
+
+---
+
 ## [0.1.0-alpha] - 2026-09-12 — Phase 1: Bootable Foundation
+
 
 ### Added
 - **x86-64 Higher-Half Linker Configuration** (`kernel/arch/x86_64/linker.ld`):

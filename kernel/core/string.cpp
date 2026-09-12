@@ -4,6 +4,9 @@
 // Freestanding Implementation of Memory and String Primitives
 // =============================================================================
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnonnull-compare"
+
 extern "C" {
 
 void* memset(void* dest, int ch, llamaos::size_t count) {
@@ -108,14 +111,16 @@ char* strncpy(char* dest, const char* src, llamaos::size_t count) {
     return dest;
 }
 
-const char* strchr(const char* str, int ch) {
+char* strchr(const char* str, int ch) {
     if (!str) return nullptr;
     char target = static_cast<char>(ch);
     while (*str) {
-        if (*str == target) return str;
+        if (*str == target) return const_cast<char*>(str);
         ++str;
     }
-    return (target == '\0') ? str : nullptr;
+    return (target == '\0') ? const_cast<char*>(str) : nullptr;
 }
 
 } // extern "C"
+
+#pragma GCC diagnostic pop

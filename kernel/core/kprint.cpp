@@ -92,9 +92,10 @@ void kvprintf(const char* fmt, va_list args) {
         ++i;
         if (fmt[i] == '\0') break;
 
-        // Parse optional padding/width
+        // Parse optional padding/width and precision
         bool pad_zero = false;
         int width = 0;
+        int precision = -1;
         if (fmt[i] == '0') {
             pad_zero = true;
             ++i;
@@ -102,6 +103,14 @@ void kvprintf(const char* fmt, va_list args) {
         while (fmt[i] >= '0' && fmt[i] <= '9') {
             width = width * 10 + (fmt[i] - '0');
             ++i;
+        }
+        if (fmt[i] == '.') {
+            ++i;
+            precision = 0;
+            while (fmt[i] >= '0' && fmt[i] <= '9') {
+                precision = precision * 10 + (fmt[i] - '0');
+                ++i;
+            }
         }
 
         // Length specifiers (l, ll)
@@ -119,7 +128,14 @@ void kvprintf(const char* fmt, va_list args) {
         switch (fmt[i]) {
             case 's': {
                 const char* s = va_arg(args, const char*);
-                kprint(s ? s : "(null)");
+                if (!s) s = "(null)";
+                if (precision >= 0) {
+                    for (int p = 0; p < precision && s[p] != '\0'; ++p) {
+                        kprint_char(s[p]);
+                    }
+                } else {
+                    kprint(s);
+                }
                 break;
             }
             case 'c': {

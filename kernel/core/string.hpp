@@ -20,7 +20,7 @@ extern "C" {
     int strncmp(const char* lhs, const char* rhs, llamaos::size_t count);
     char* strcpy(char* dest, const char* src);
     char* strncpy(char* dest, const char* src, llamaos::size_t count);
-    const char* strchr(const char* str, int ch);
+    char* strchr(const char* str, int ch);
 }
 
 namespace llamaos {
