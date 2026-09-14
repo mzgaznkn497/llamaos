@@ -17,3 +17,6 @@ __pycache__/
 *.pyc
 *.pcap
 scratch/
+
+# Temporary cloned repos
+GrowTools-Albin/
