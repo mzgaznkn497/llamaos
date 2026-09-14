@@ -40,6 +40,11 @@ SECTIONS
     {
         _rodata_start = .;
         *(.rodata .rodata.*)
+        . = ALIGN(8);
+        _init_array_start = .;
+        KEEP(*(SORT_BY_INIT_PRIORITY(.init_array.*) SORT_BY_INIT_PRIORITY(.ctors.*)))
+        KEEP(*(.init_array .ctors))
+        _init_array_end = .;
         _rodata_end = .;
     }
 

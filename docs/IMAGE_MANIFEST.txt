@@ -1,0 +1,140 @@
+================================================================================
+                      LLAMAOS/A DISK IMAGE MANIFEST                             
+                 DIRECT-BOOT VPS PRODUCTION IMAGE ARTIFACT                      
+================================================================================
+
+IMAGE METADATA
+--------------------------------------------------------------------------------
+Image Filename      : build/llamaos.img
+Image Description   : Dual-Boot (BIOS i386-pc & UEFI x86_64-efi) GPT Disk Image
+Target Architecture : x86-64 (AMD64)
+Total Byte Size     : 268,435,456 bytes (256.00 MiB)
+Total Sectors       : 524,288 sectors
+Sector Size         : 512 bytes (logical and physical)
+Partition Scheme    : GUID Partition Table (GPT) with Protective MBR
+Disk Identifier/GUID: 509CE390-BA06-4284-9D96-B67071706391
+Image SHA-256 Sum   : 1da24b4a7bf5b2b7b93014a4020737a6a8757250a2712afd2ed0d1370373420e
+Creation Timestamp  : 2026-09-13T07:26:24Z
+
+CORE BINARY INVENTORY & CRYPTOGRAPHIC CHECKSUMS
+--------------------------------------------------------------------------------
+1. Kernel ELF Binary
+   Path in Image    : /boot/llamaos.elf
+   Host Path        : build/llamaos.elf
+   Binary Format    : ELF 64-bit LSB executable, x86-64, version 1 (SYSV)
+   File Size        : 1,308,576 bytes
+   Entry Point (VA) : 0xFFFFFFFF80100000
+   Virtual Base     : 0xFFFFFFFF80000000 (Higher-half kernel)
+   Physical Base    : 0x0000000000100000 (1 MiB physical load address)
+   SHA-256 Sum      : 6a801fb352eee4a2824d669e54062722e72f846503f6407a72ad031914a408bd
+
+2. Interactive Userland Shell (/bin/sh)
+   Path in Image    : /bin/sh
+   Host Path        : build/sh.elf
+   Binary Format    : ELF 64-bit LSB executable, x86-64, statically linked
+   File Size        : 11,480 bytes
+   Entry Point (VA) : 0x0000000000600000 (Ring 3 user space)
+   Execution Level  : CPL=3 (Ring 3 user mode)
+   SHA-256 Sum      : e974048663f8b9e1910ef2bcc7a2fb9a932dc7f79d88c0ca118837b36b9e82c7
+
+3. Primary Init Process (/bin/init)
+   Path in Image    : /bin/init
+   Host Path        : build/init.elf
+   Binary Format    : ELF 64-bit LSB executable, x86-64, statically linked
+   File Size        : 8,432 bytes
+   Entry Point (VA) : 0x0000000000400000 (Ring 3 user space)
+   Execution Level  : CPL=3 (Ring 3 user mode)
+   SHA-256 Sum      : 5b86dfc2f8639de02af07c336ff59ed1fab9cfaf203f5e84ee130644efcc06c5
+
+GPT PARTITION TABLE LAYOUT
+--------------------------------------------------------------------------------
+Partition 1 (BIOS Boot Partition):
+  Device Name       : vda1
+  Partition Code    : EF02 (BIOS Boot Partition)
+  Partition Type GUID: 21686148-6449-6E6F-744E-656564454649
+  Partition Unique GUID: 49DE84BD-D5DB-4E14-9562-69DB385C77A8
+  Partition Name    : BIOS_BOOT
+  Start LBA         : 2048
+  End LBA           : 10239
+  Sector Count      : 8,192 sectors
+  Capacity          : 4.00 MiB (4,194,304 bytes)
+  Filesystem        : Raw binary (Contains GRUB 2 BIOS core.img stage 1.5/2)
+  Purpose           : Enables GRUB 2 BIOS boot on modern GPT-partitioned VPS disks.
+
+Partition 2 (EFI System Partition - ESP):
+  Device Name       : vda2
+  Partition Code    : EF00 (EFI System Partition)
+  Partition Type GUID: C12A7328-F81F-11D2-BA4B-00A0C93EC93B
+  Partition Unique GUID: DBBCE19E-7895-4F14-8EDF-AD539EE209D6
+  Partition Name    : ESP
+  Start LBA         : 10240
+  End LBA           : 75775
+  Sector Count      : 65,536 sectors
+  Capacity          : 32.00 MiB (33,554,432 bytes)
+  Filesystem        : FAT32 (MSDOS / VFAT)
+  Volume Label      : ESP
+  Volume UUID       : F3C1-C657
+  Sector Size       : 512 bytes
+  Cluster Size      : 512 bytes (1 sector/cluster)
+  Purpose           : UEFI firmware boot compatibility, contains BOOTX64.EFI.
+
+Partition 3 (LlamaOS Root Filesystem):
+  Device Name       : vda3
+  Partition Code    : 0700 (Microsoft Basic Data / Linux Data)
+  Partition Type GUID: EBD0A0A2-B9E5-4433-87C0-68B6B72699C7
+  Partition Unique GUID: 6C657B3A-C1E9-43F8-A36B-8F288ACB43E1
+  Partition Name    : LLAMAOS_ROOT
+  Start LBA         : 75776
+  End LBA           : 524254
+  Sector Count      : 448,479 sectors
+  Capacity          : 218.98 MiB (229,621,248 bytes)
+  Filesystem        : FAT32 (MSDOS / VFAT)
+  Volume Label      : LLAMAOS_SYS
+  Volume UUID       : F3C1-E91D
+  Sector Size       : 512 bytes
+  Cluster Size      : 512 bytes (1 sector/cluster)
+  Total Clusters    : 441,516 clusters
+  Root Cluster      : Cluster 2
+  Mount Point       : / (Root VFS mount)
+  Purpose           : Primary persistent root filesystem for LlamaOS/A.
+
+ROOT FILESYSTEM DIRECTORY STRUCTURE & FILE INVENTORY (vda3)
+--------------------------------------------------------------------------------
+/
+├── bin/
+│   ├── init                [8,432 B]  Ring 3 bootstrap binary (CPL=3)
+│   └── sh                  [11,480 B] Interactive Ring 3 shell with POSIX VFS
+├── boot/
+│   ├── llamaos.elf         [1,308,576 B] LlamaOS/A x86-64 kernel executable
+│   └── grub/
+│       ├── grub.cfg        [853 B]    GRUB 2 boot configuration script
+│       ├── i386-pc/        [288 files] Complete GRUB 2 BIOS module set
+│       └── x86_64-efi/     [288 files] Complete GRUB 2 UEFI module set
+├── config/
+│   └── network.cfg         [95 B]     Network & remote management service config
+├── efi/                    [Directory] Mount point for ESP
+└── etc/
+    ├── hostname            [12 B]     System hostname ("llamaos-vps")
+    └── os-release          [112 B]    OS release identification manifest
+
+BOOTLOADER CONFIGURATION (boot/grub/grub.cfg)
+--------------------------------------------------------------------------------
+Serial Console  : Unit 0, Speed 115200 baud (COM1 8N1)
+Terminal Input  : serial, console
+Terminal Output : serial, console
+Default Entry   : 0 ("LlamaOS/A - Direct Boot (Shell)")
+Timeout         : 1 second
+Kernel Protocol : Multiboot2 specification compliant
+
+KERNEL RUNTIME HARDWARE REQUIREMENTS & SPECIFICATIONS
+--------------------------------------------------------------------------------
+Architecture    : x86-64 (AMD64)
+Minimum Memory  : 128 MiB RAM (Recommended: 512 MiB - 8 GiB)
+Storage Disk    : VirtIO Block Device (`1af4:1001` or `1af4:1042`) or IDE/AHCI
+Storage Layout  : GPT partition table with FAT32 root partition (Volume LLAMAOS_SYS)
+Network Adapter : VirtIO Network Device (`1af4:1000` or `1af4:1041`)
+Network Protocol: Static IPv4 (10.0.2.15/24) or DHCP; Gateway 10.0.2.2
+Remote Access   : TCP Remote Management Console listening on port 2222
+Interactive CLI : Serial console COM1 (115200 baud) + Dual PS/2 keyboard & VGA
+================================================================================
+END OF MANIFEST

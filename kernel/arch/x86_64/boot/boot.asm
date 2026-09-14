@@ -187,9 +187,9 @@ _start:
 ; Early Page Table Initialization (32-bit protected mode)
 ; ------------------------------------------------------------------------------
 setup_early_page_tables:
-    ; Zero out PML4, PDPTs, and PDs
+    ; Zero out PML4, PDPTs, and PDs (6 tables of 4096 bytes: PML4, PDPT-ident, PDPT-kern, PD-ident, PD-kern, PD-kern2)
     mov edi, early_pml4
-    mov ecx, (5 * 4096) / 4
+    mov ecx, (6 * 4096) / 4
     xor eax, eax
     rep stosd
 

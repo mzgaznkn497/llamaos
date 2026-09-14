@@ -65,8 +65,43 @@ inline uint64_t read_rflags() {
     return flags;
 }
 
+inline uint64_t read_msr(uint32_t msr) {
+    uint32_t low, high;
+    asm volatile("rdmsr" : "=a"(low), "=d"(high) : "c"(msr));
+    return (static_cast<uint64_t>(high) << 32) | low;
+}
+
+inline void write_msr(uint32_t msr, uint64_t val) {
+    uint32_t low = static_cast<uint32_t>(val);
+    uint32_t high = static_cast<uint32_t>(val >> 32);
+    asm volatile("wrmsr" : : "a"(low), "d"(high), "c"(msr));
+}
+
+inline uint64_t rdtsc() {
+    uint32_t low, high;
+    asm volatile("rdtsc" : "=a"(low), "=d"(high));
+    return (static_cast<uint64_t>(high) << 32) | low;
+}
+
+struct [[gnu::packed]] Gdtr {
+    uint16_t limit;
+    uint64_t base;
+};
+
+inline void sgdt(Gdtr& gdtr) {
+    asm volatile("sgdt %0" : "=m"(gdtr));
+}
+
+inline void lgdt(const Gdtr& gdtr) {
+    asm volatile("lgdt %0" : : "m"(gdtr));
+}
+
 inline void halt() {
     asm volatile("hlt");
+}
+
+inline void pause() {
+    asm volatile("pause");
 }
 
 inline void cli() {

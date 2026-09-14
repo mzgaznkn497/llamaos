@@ -47,6 +47,15 @@ bool SerialPort::is_transmit_empty(uint16_t base) {
     return (inb(base + 5) & 0x20) != 0;
 }
 
+bool SerialPort::has_rx(uint16_t base) {
+    return (inb(base + 5) & 0x01) != 0;
+}
+
+char SerialPort::get_char(uint16_t base) {
+    if (!has_rx(base)) return 0;
+    return static_cast<char>(inb(base + 0));
+}
+
 void SerialPort::put_char(char c) {
     // Always mirror to QEMU/Bochs debug port 0xE9
     outb(DEBUG_PORT, static_cast<uint8_t>(c));

@@ -1,5 +1,6 @@
 # Build artifacts
 build/
+build-*/
 bin/
 *.o
 *.elf
@@ -12,3 +13,7 @@ bin/
 .idea/
 *.swp
 *~
+__pycache__/
+*.pyc
+*.pcap
+scratch/

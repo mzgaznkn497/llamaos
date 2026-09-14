@@ -63,4 +63,9 @@ if [[ ${TEST_MODE} -eq 1 ]]; then
     QEMU_ARGS+=(-device isa-debug-exit,iobase=0xf4,iosize=0x04)
 fi
 
+# In headless/container environments without X11 DISPLAY, fall back to headless display
+if [[ -z "${DISPLAY:-}" ]]; then
+    QEMU_ARGS+=(-display none)
+fi
+
 exec qemu-system-x86_64 "${QEMU_ARGS[@]}"

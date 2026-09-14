@@ -26,6 +26,8 @@ public:
     static void write_signed_dec(int64_t value);
 
     static bool is_transmit_empty(uint16_t base = COM1_BASE);
+    static bool has_rx(uint16_t base = COM1_BASE);
+    static char get_char(uint16_t base = COM1_BASE);
 
 private:
     static inline uint16_t s_base_port = COM1_BASE;

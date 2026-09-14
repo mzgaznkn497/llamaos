@@ -43,6 +43,8 @@ public:
     static void write(const char* str, size_t length);
     static void update_cursor();
     static void set_cursor(size_t col, size_t row);
+    static void get_cursor(size_t& col, size_t& row) noexcept { col = s_col; row = s_row; }
+    static bool is_initialized() noexcept { return s_initialized; }
 
 private:
     static inline volatile uint16_t* s_buffer = reinterpret_cast<volatile uint16_t*>(phys_to_virt(VGA_BUFFER_PHYS));

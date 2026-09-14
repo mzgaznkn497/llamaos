@@ -54,9 +54,32 @@ void kprint_dec(uint64_t val) {
 void kprint_signed(int64_t val) {
     if (val < 0) {
         kprint_char('-');
-        kprint_dec(static_cast<uint64_t>(-val));
+        uint64_t uval = (val == INT64_MIN)
+            ? (static_cast<uint64_t>(INT64_MAX) + 1ULL)
+            : static_cast<uint64_t>(-val);
+        kprint_dec(uval);
     } else {
         kprint_dec(static_cast<uint64_t>(val));
+    }
+}
+
+static void print_padded_dec(uint64_t val, int width, bool pad_zero) {
+    char buf[32];
+    int idx = 0;
+    if (val == 0) {
+        buf[idx++] = '0';
+    } else {
+        while (val > 0) {
+            buf[idx++] = static_cast<char>('0' + (val % 10));
+            val /= 10;
+        }
+    }
+    char pad_char = pad_zero ? '0' : ' ';
+    while (idx < width && idx < 31) {
+        buf[idx++] = pad_char;
+    }
+    for (int i = idx - 1; i >= 0; --i) {
+        kprint_char(buf[i]);
     }
 }
 
@@ -113,9 +136,10 @@ void kvprintf(const char* fmt, va_list args) {
             }
         }
 
-        // Length specifiers (l, ll)
+        // Length specifiers (l, ll, z)
         bool is_long = false;
         bool is_long_long = false;
+        bool is_size_t = false;
         if (fmt[i] == 'l') {
             is_long = true;
             ++i;
@@ -123,6 +147,9 @@ void kvprintf(const char* fmt, va_list args) {
                 is_long_long = true;
                 ++i;
             }
+        } else if (fmt[i] == 'z') {
+            is_size_t = true;
+            ++i;
         }
 
         switch (fmt[i]) {
@@ -146,36 +173,61 @@ void kvprintf(const char* fmt, va_list args) {
             case 'd':
             case 'i': {
                 int64_t v;
-                if (is_long_long || is_long) {
+                if (is_long_long || is_long || is_size_t) {
                     v = va_arg(args, int64_t);
                 } else {
                     v = va_arg(args, int);
                 }
-                kprint_signed(v);
+                if (v < 0) {
+                    kprint_char('-');
+                    uint64_t uval = (v == INT64_MIN)
+                        ? (static_cast<uint64_t>(INT64_MAX) + 1ULL)
+                        : static_cast<uint64_t>(-v);
+                    if (width > 1) {
+                        print_padded_dec(uval, width - 1, pad_zero);
+                    } else {
+                        kprint_dec(uval);
+                    }
+                } else {
+                    if (width > 0) {
+                        print_padded_dec(static_cast<uint64_t>(v), width, pad_zero);
+                    } else {
+                        kprint_dec(static_cast<uint64_t>(v));
+                    }
+                }
                 break;
             }
             case 'u': {
                 uint64_t v;
-                if (is_long_long || is_long) {
+                if (is_long_long || is_long || is_size_t) {
                     v = va_arg(args, uint64_t);
                 } else {
                     v = va_arg(args, unsigned int);
                 }
-                kprint_dec(v);
+                if (width > 0) {
+                    print_padded_dec(v, width, pad_zero);
+                } else {
+                    kprint_dec(v);
+                }
                 break;
             }
             case 'x':
             case 'X': {
                 uint64_t v;
-                if (is_long_long || is_long) {
+                if (is_long_long || is_long || is_size_t) {
                     v = va_arg(args, uint64_t);
                 } else {
                     v = va_arg(args, unsigned int);
                 }
-                if (width > 0 && pad_zero) {
-                    print_padded_hex(v, width);
+                if (width > 0) {
+                    if (pad_zero) {
+                        print_padded_hex(v, width);
+                    } else {
+                        kprint_hex(v, static_cast<uint8_t>(width));
+                    }
                 } else {
-                    kprint_hex(v, width > 0 ? static_cast<uint8_t>(width) : 8);
+                    uint8_t default_width = (is_long || is_long_long || is_size_t) ? 16 : 8;
+                    kprint_hex(v, default_width);
                 }
                 break;
             }

@@ -7,6 +7,21 @@
 
 extern "C" {
 
+// Static global constructor array boundaries defined in linker script
+extern void (*_init_array_start[])() __attribute__((weak));
+extern void (*_init_array_end[])() __attribute__((weak));
+
+void call_global_constructors() {
+    if (&_init_array_start == nullptr || &_init_array_end == nullptr) {
+        return;
+    }
+    for (void (**ctor)() = _init_array_start; ctor < _init_array_end; ++ctor) {
+        if (*ctor) {
+            (*ctor)();
+        }
+    }
+}
+
 // Freestanding C++ ABI hooks
 void __cxa_pure_virtual() {
     KPANIC("Pure virtual function called in freestanding kernel context!");
@@ -29,3 +44,29 @@ llamaos::uintptr_t __stack_chk_guard = 0x595e9fbd94fda766ULL;
 }
 
 } // extern "C"
+
+// Freestanding placement new definitions
+void* operator new(llamaos::size_t, void* ptr) noexcept {
+    return ptr;
+}
+
+void* operator new[](llamaos::size_t, void* ptr) noexcept {
+    return ptr;
+}
+
+// Deterministic panicking stubs for unsupported freestanding heap deallocation
+void operator delete(void*) noexcept {
+    KPANIC("Dynamic memory deallocation (operator delete) is not supported in Phase 1!");
+}
+
+void operator delete[](void*) noexcept {
+    KPANIC("Dynamic memory deallocation (operator delete[]) is not supported in Phase 1!");
+}
+
+void operator delete(void*, llamaos::size_t) noexcept {
+    KPANIC("Sized dynamic memory deallocation (operator delete) is not supported in Phase 1!");
+}
+
+void operator delete[](void*, llamaos::size_t) noexcept {
+    KPANIC("Sized dynamic memory deallocation (operator delete[]) is not supported in Phase 1!");
+}

@@ -39,6 +39,8 @@ constexpr uint8_t  UINT8_MAX  = 0xFFU;
 constexpr uint16_t UINT16_MAX = 0xFFFFU;
 constexpr uint32_t UINT32_MAX = 0xFFFFFFFFU;
 constexpr uint64_t UINT64_MAX = 0xFFFFFFFFFFFFFFFFULL;
+constexpr uintptr_t UINTPTR_MAX = 0xFFFFFFFFFFFFFFFFULL;
+constexpr intptr_t  INTPTR_MAX  = 0x7FFFFFFFFFFFFFFFLL;
 
 constexpr int8_t   INT8_MAX   = 0x7F;
 constexpr int8_t   INT8_MIN   = -0x80;
@@ -54,25 +56,48 @@ constexpr uintptr_t KERNEL_VIRTUAL_BASE = 0xFFFFFFFF80000000ULL;
 constexpr uintptr_t PAGE_SIZE           = 4096ULL;
 constexpr uintptr_t LARGE_PAGE_SIZE     = 2 * 1024 * 1024ULL; // 2 MiB
 
-// Utility function to convert physical address to higher-half kernel virtual address
+// Address translation helpers (Valid for physical addresses 0x0 .. 0x7FFFFFFF mapped to -2 GiB .. 0)
 inline constexpr uintptr_t phys_to_virt(uintptr_t phys) {
     return phys + KERNEL_VIRTUAL_BASE;
 }
 
-// Utility function to convert higher-half kernel virtual address to physical address
 inline constexpr uintptr_t virt_to_phys(uintptr_t virt) {
     return virt - KERNEL_VIRTUAL_BASE;
 }
 
-// Memory alignment helper
+// Memory alignment helpers with integer overflow protection
+template <typename T>
+inline constexpr bool align_up_checked(T value, T alignment, T& out) {
+    if (alignment == 0) {
+        out = value;
+        return true;
+    }
+    T rem = value % alignment;
+    if (rem == 0) {
+        out = value;
+        return true;
+    }
+    T delta = alignment - rem;
+    if (value > static_cast<T>(~static_cast<T>(0)) - delta) {
+        return false; // Overflow would occur
+    }
+    out = value + delta;
+    return true;
+}
+
 template <typename T>
 inline constexpr T align_up(T value, T alignment) {
-    return (value + alignment - 1) & ~(alignment - 1);
+    T res = value;
+    if (!align_up_checked(value, alignment, res)) {
+        return static_cast<T>(~static_cast<T>(0)); // Saturate on overflow
+    }
+    return res;
 }
 
 template <typename T>
 inline constexpr T align_down(T value, T alignment) {
-    return value & ~(alignment - 1);
+    if (alignment == 0) return value;
+    return value - (value % alignment);
 }
 
 } // namespace llamaos
@@ -96,8 +121,10 @@ using llamaos::UINT8_MAX;
 using llamaos::UINT16_MAX;
 using llamaos::UINT32_MAX;
 using llamaos::UINT64_MAX;
+using llamaos::UINTPTR_MAX;
 using llamaos::INT8_MAX;
 using llamaos::INT16_MAX;
 using llamaos::INT32_MAX;
 using llamaos::INT64_MAX;
+using llamaos::INTPTR_MAX;
 
